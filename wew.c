@@ -44,6 +44,8 @@ void register_events(xcb_window_t, uint32_t);
 xcb_window_t get_window_id(xcb_generic_event_t*);
 int motherfuckingenterevent(xcb_generic_event_t*);
 
+static int sensitive = 0;
+
 void
 usage(char *name)
 {
@@ -97,9 +99,15 @@ int
 motherfuckingenterevent(xcb_generic_event_t *e)
 {
 	xcb_enter_notify_event_t *ee;
+	int inferior_detail;
 
 	ee = (xcb_enter_notify_event_t*)e;
-	if (ee->detail == 0 && 
+
+	inferior_detail = (ee->detail == 0);
+	if (sensitive)
+		inferior_detail = (ee->detail != XCB_NOTIFY_DETAIL_INFERIOR);
+
+	if (inferior_detail && 
 			(ee->mode == XCB_NOTIFY_MODE_NORMAL ||
 			 ee->mode == XCB_NOTIFY_MODE_UNGRAB))
 		return 1;
@@ -264,6 +272,9 @@ main (int argc, char **argv)
 			exit(0);
 		case 'm':
 			  mask = strtoul(EARGF(usage(argv0)), NULL, 10);
+			  break;
+		case 's':
+			  sensitive = 1;
 			  break;
 		default: usage(argv0);
 	} ARGEND;
