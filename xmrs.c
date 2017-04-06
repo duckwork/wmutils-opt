@@ -57,7 +57,7 @@ mresize(xcb_window_t win) {
 
 	geom = xcb_get_geometry_reply(conn, xcb_get_geometry(conn, win), NULL);
 	xcb_warp_pointer(conn, XCB_NONE, win, 0, 0, 0, 0,
-			geom->width/2, geom->height/2);
+			geom->width - 12, geom->height - 12);
 
 	if (!geom)
 		errx(1, "could not get window size");
@@ -99,8 +99,8 @@ mresize(xcb_window_t win) {
 		if (!ptr)
 			errx(1, "could not get pointer location");
 
-		values[0] = MAX(1, ptr->root_x - geom->x - 2 * geom->border_width);
-		values[1] = MAX(1, ptr->root_y - geom->y - 2 * geom->border_width);
+		values[0] = MAX(1, ptr->root_x - geom->x + 12 - 2 * geom->border_width);
+		values[1] = MAX(1, ptr->root_y - geom->y + 12 - 2 * geom->border_width);
 
 
 		if (values[0] >= 0 && values[1] >= 0)
