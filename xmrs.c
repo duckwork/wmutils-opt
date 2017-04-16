@@ -8,6 +8,7 @@
 
 #define CLEANMASK(m)	((m & ~0x80))
 #define MAX(a, b) (a > b ? a : b)
+#define MIN(a, b) (a > b ? b : a)
 
 static xcb_connection_t	*conn;
 static xcb_screen_t	*scr;
@@ -54,10 +55,11 @@ mresize(xcb_window_t win) {
 	xcb_query_pointer_reply_t *ptr;
 	xcb_generic_event_t *ev = NULL;
 	int orig_width, orig_height;
+	int inside = 12;
 
 	geom = xcb_get_geometry_reply(conn, xcb_get_geometry(conn, win), NULL);
 	xcb_warp_pointer(conn, XCB_NONE, win, 0, 0, 0, 0,
-			geom->width - 12, geom->height - 12);
+			geom->width - inside, geom->height - inside);
 
 	if (!geom)
 		errx(1, "could not get window size");
@@ -99,9 +101,11 @@ mresize(xcb_window_t win) {
 		if (!ptr)
 			errx(1, "could not get pointer location");
 
-		values[0] = MAX(1, ptr->root_x - geom->x + 12 - 2 * geom->border_width);
-		values[1] = MAX(1, ptr->root_y - geom->y + 12 - 2 * geom->border_width);
-
+		values[0] = MAX(1, ptr->root_x - geom->x + inside - 2 * geom->border_width);
+		values[1] = MAX(1, ptr->root_y - geom->y + inside - 2 * geom->border_width);
+		/* sanitize */
+		values[0] = MIN(values[0], scr->width_in_pixels - (geom->x + inside + geom->border_width));
+		values[1] = MIN(values[1], scr->height_in_pixels - (geom->y + inside + geom->border_width));
 
 		if (values[0] >= 0 && values[1] >= 0)
 			xcb_configure_window(conn, win, XCB_CONFIG_WINDOW_WIDTH
